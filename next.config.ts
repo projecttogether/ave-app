@@ -13,6 +13,32 @@ const nextConfig: NextConfig = {
   experimental: {
     memoryBasedWorkersCount: true,
   },
+  // Browser events reach Sentry through /monitoring, same-origin under the Content
+  // Security Policy (src/instrumentation-client.ts). The proxy checks each request
+  // first (src/proxy.ts); these rewrites then forward it to Sentry, as the
+  // `tunnelRoute` of @sentry/nextjs 11.4 did. From 11.17 that option answers the
+  // route ahead of the proxy, so the app sets the tunnel up itself.
+  async rewrites() {
+    const org = { type: "query" as const, key: "o", value: "(?<orgid>\\d+)" };
+    const project = { type: "query" as const, key: "p", value: "(?<projectid>\\d+)" };
+    const region = { type: "query" as const, key: "r", value: "(?<region>[a-z]{2})" };
+    return {
+      beforeFiles: [
+        {
+          source: "/monitoring(/?)",
+          has: [org, project, region],
+          destination: "https://o:orgid.ingest.:region.sentry.io/api/:projectid/envelope/?hsts=0",
+        },
+        {
+          source: "/monitoring(/?)",
+          has: [org, project],
+          destination: "https://o:orgid.ingest.sentry.io/api/:projectid/envelope/?hsts=0",
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
     return [
@@ -61,6 +87,4 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  // Keep browser events same-origin under the app's Content Security Policy.
-  tunnelRoute: "/monitoring",
 });

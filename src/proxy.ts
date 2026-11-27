@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { contentSecurityPolicy } from "@/lib/security/csp"
 import { sentryOptions } from "@/lib/sentry-options"
 import { validRouterState } from "@/lib/security/router-state"
-import { rejectSentryTunnelRequest, sentryTunnelTarget, SENTRY_TUNNEL_PATHS } from "@/lib/security/sentry-tunnel"
+import { isSentryTunnelPath, rejectSentryTunnelRequest, sentryTunnelTarget } from "@/lib/security/sentry-tunnel"
 
 const sentryTunnel = sentryOptions.enabled ? sentryTunnelTarget(sentryOptions.dsn) : null
 
@@ -57,7 +57,7 @@ export default function proxy(...args: Parameters<typeof authProxy>) {
   const [request] = args
   // Proxy runs before the Sentry tunnel rewrite. The tunnel carries no session,
   // so it skips authentication and only forwards this app's own Sentry project.
-  if (SENTRY_TUNNEL_PATHS.has(request.nextUrl.pathname)) {
+  if (isSentryTunnelPath(request.nextUrl.pathname)) {
     const status = rejectSentryTunnelRequest(sentryTunnel, {
       method: request.method,
       searchParams: request.nextUrl.searchParams,
