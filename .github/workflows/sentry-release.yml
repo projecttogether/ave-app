@@ -83,7 +83,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
           SENTRY_PROJECT: ave-app
-          SENTRY_INITIAL_PREVIOUS_COMMIT: f1f0bedcef8c340e1cb7ed422e2de9e3c881bd60
+          SENTRY_INITIAL_PREVIOUS_COMMIT: d3b34b9c64068122aa4c6622beb3d513c0107231
           DEPLOYMENT_HEALTH_URLS: >-
             https://app.ave-gastro.org/api/health
         run: python3 scripts/sentry_release.py

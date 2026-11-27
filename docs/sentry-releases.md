@@ -8,8 +8,9 @@ keep their existing bodies and do not reveal the raw commit.
 
 After confirmation, the workflow associates the release with its GitHub commit
 range and records a `production` deployment in Sentry. The range starts at the
-last deployment reported by this workflow, so a superseded build cannot skip
-fixes. The configured initial baseline is used only before the first report.
+last deployment this repository reported (deployments are keyed by the GitHub
+repository ID), so a superseded build cannot skip fixes. The configured initial
+baseline, the repository's first commit, is used only before the first report.
 The probes confirm the web services; they do not establish the release of
 independently deployed background workers.
 
