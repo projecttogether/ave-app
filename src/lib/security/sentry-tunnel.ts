@@ -2,6 +2,14 @@ export type SentryTunnelTarget = { orgId: string; projectId: string; region?: st
 
 export const SENTRY_TUNNEL_PATHS = new Set(['/monitoring', '/monitoring/'])
 
+/**
+ * Next.js matches rewrites case-insensitively, so `/MONITORING` reaches the tunnel
+ * rewrite too. The proxy must check every path the rewrite accepts.
+ */
+export function isSentryTunnelPath(pathname: string): boolean {
+  return SENTRY_TUNNEL_PATHS.has(pathname.toLowerCase())
+}
+
 // Browser envelopes are small; Sentry's own ingest limit for a whole envelope is larger,
 // but nothing this app sends approaches it.
 export const SENTRY_TUNNEL_MAX_BYTES = 1024 * 1024

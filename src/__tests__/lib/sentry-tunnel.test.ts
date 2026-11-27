@@ -101,4 +101,13 @@ describe('proxy tunnel handling', () => {
     expect(response?.status).toBe(404)
     expect(response?.headers.get('content-security-policy')).toBeNull()
   })
+
+  it.each(['/MONITORING', '/Monitoring/'])('checks %s, which the case-insensitive rewrite also forwards', async (path) => {
+    const { default: proxy } = await import('@/proxy')
+    const request = new NextRequest(`https://example.invalid${path}?o=1&p=2`, {
+      method: 'POST', body: 'x', headers: { 'content-length': '1' },
+    })
+    const response = await proxy(request, { params: Promise.resolve({}) })
+    expect(response?.status).toBe(404)
+  })
 })
