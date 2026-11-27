@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { rejectSentryTunnelRequest, sentryTunnelTarget, SENTRY_TUNNEL_MAX_BYTES } from '@/lib/security/sentry-tunnel'
+import { rejectSentryTunnelRequest, sentryTunnelTarget, sentryTunnelUrl, SENTRY_TUNNEL_MAX_BYTES } from '@/lib/security/sentry-tunnel'
 import { sentryOptions } from '@/lib/sentry-options'
 
 vi.mock('next-auth', () => ({
@@ -36,6 +36,17 @@ describe('sentryTunnelTarget', () => {
     'https://key@oabc.ingest.sentry.io/1',
   ])('disables the tunnel for %s', (dsn) => {
     expect(sentryTunnelTarget(dsn)).toBeNull()
+  })
+})
+
+describe('sentryTunnelUrl', () => {
+  it.each([
+    ['a regional DSN', regional, '/monitoring?o=4511987937705984&p=4512174513913936&r=de'],
+    ['a DSN without a region', { orgId: '123', projectId: '456' }, '/monitoring?o=123&p=456'],
+  ])('sends the browser SDK to exactly the query the proxy accepts for %s', (_, target, expected) => {
+    const url = new URL(sentryTunnelUrl(target), 'https://app.example')
+    expect(url.pathname + url.search).toBe(expected)
+    expect(rejectSentryTunnelRequest(target, { method: 'POST', searchParams: url.searchParams, contentLength: '512' })).toBeNull()
   })
 })
 

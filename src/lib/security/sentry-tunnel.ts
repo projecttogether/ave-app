@@ -7,9 +7,9 @@ export const SENTRY_TUNNEL_PATHS = new Set(['/monitoring', '/monitoring/'])
 export const SENTRY_TUNNEL_MAX_BYTES = 1024 * 1024
 
 /**
- * Derives the tunnel query (`o`, `p`, `r`) the same way the Sentry browser SDK does
- * (`@sentry/nextjs` client/tunnelRoute.js). Returns null for anything that is not a
- * Sentry SaaS DSN, which disables the tunnel.
+ * Derives the tunnel query (`o`, `p`, `r`) from the DSN, the way `@sentry/nextjs` 11.4
+ * did for `tunnelRoute`. Returns null for anything that is not a Sentry SaaS DSN, which
+ * disables the tunnel.
  */
 export function sentryTunnelTarget(dsn: string | undefined): SentryTunnelTarget | null {
   if (!dsn) return null
@@ -26,7 +26,16 @@ export function sentryTunnelTarget(dsn: string | undefined): SentryTunnelTarget 
 }
 
 /**
- * The tunnel rewrite from `@sentry/nextjs` forwards any numeric org and project to
+ * The browser SDK's tunnel URL: exactly the query `rejectSentryTunnelRequest` accepts.
+ */
+export function sentryTunnelUrl(target: SentryTunnelTarget): string {
+  const query = new URLSearchParams({ o: target.orgId, p: target.projectId })
+  if (target.region) query.set('r', target.region)
+  return `/monitoring?${query}`
+}
+
+/**
+ * The tunnel rewrite (next.config.ts) forwards any numeric org and project to
  * `o<org>.ingest.sentry.io`. Only this app's own project may pass, so the server cannot
  * be used to relay envelopes to other Sentry accounts. Returns the HTTP status for a
  * rejected request, or null when the request may continue to the rewrite.
