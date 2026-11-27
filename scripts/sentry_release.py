@@ -100,9 +100,11 @@ def wait_for_release_commits(sentry, release_path, repository, commit):
     raise RuntimeError("Sentry did not import the release's GitHub commits.")
 
 
-def report_release(sentry, project, repository, commit, initial_previous):
+def report_release(sentry, project, repository, repository_id, commit, initial_previous):
     release_path = f"releases/{quote(commit, safe='')}/"
-    deploy_prefix = f"github:{sha256(repository.encode()).hexdigest()[:12]}:"
+    # Keyed by the repository ID, not its name: a new repository under the same
+    # name starts at its initial baseline, not at a commit it does not have.
+    deploy_prefix = f"github:{sha256(repository_id.encode()).hexdigest()[:12]}:"
     deploy_name = f"{deploy_prefix}{commit}"
     previous = None
     for release in sentry.releases(project):
@@ -176,6 +178,7 @@ def main():
         Sentry(token),
         os.environ["SENTRY_PROJECT"],
         os.environ["GITHUB_REPOSITORY"],
+        os.environ["GITHUB_REPOSITORY_ID"],
         commit,
         os.environ["SENTRY_INITIAL_PREVIOUS_COMMIT"],
     )

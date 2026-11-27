@@ -12,7 +12,8 @@ COMMIT = "a" * 40
 PREVIOUS = "b" * 40
 INITIAL = "c" * 40
 REPOSITORY = "projecttogether/example"
-DEPLOY_PREFIX = f"github:{sha256(REPOSITORY.encode()).hexdigest()[:12]}:"
+REPOSITORY_ID = "1234567890"
+DEPLOY_PREFIX = f"github:{sha256(REPOSITORY_ID.encode()).hexdigest()[:12]}:"
 URLS = ["https://app.example/readyz", "https://form.example/readyz"]
 
 
@@ -107,7 +108,7 @@ class ReleaseTests(unittest.TestCase):
         ):
             with self.subTest(repository=repository):
                 sentry = FakeSentry()
-                reporter.report_release(sentry, "example", repository, COMMIT, INITIAL)
+                reporter.report_release(sentry, "example", repository, REPOSITORY_ID, COMMIT, INITIAL)
                 self.assertLessEqual(len(sentry.calls[-1][2]["name"]), 64)
 
     def test_unnamed_production_deployments_are_skipped(self):
@@ -119,7 +120,7 @@ class ReleaseTests(unittest.TestCase):
                 ]
             },
         )
-        reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+        reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         update = next(data for _, method, data in sentry.calls if method == "PUT")
         self.assertEqual(update["refs"][0]["previousCommit"], INITIAL)
 
@@ -127,7 +128,7 @@ class ReleaseTests(unittest.TestCase):
         self,
     ):
         sentry = FakeSentry()
-        reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+        reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         self.assertEqual(
             [call[1] for call in sentry.calls], ["POST", "PUT", "GET", "POST"]
         )
@@ -154,9 +155,23 @@ class ReleaseTests(unittest.TestCase):
             ],
             {f"releases/{PREVIOUS}/deploys/": [deploy]},
         )
-        reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+        reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         update = next(data for _, method, data in sentry.calls if method == "PUT")
         self.assertEqual(update["refs"][0]["previousCommit"], PREVIOUS)
+
+    def test_deploys_of_an_earlier_repository_with_the_same_name_are_skipped(self):
+        earlier = f"github:{sha256(REPOSITORY.encode()).hexdigest()[:12]}:{PREVIOUS}"
+        sentry = FakeSentry(
+            [{"version": PREVIOUS, "deployCount": 1}],
+            {
+                f"releases/{PREVIOUS}/deploys/": [
+                    {"environment": "production", "name": earlier}
+                ]
+            },
+        )
+        reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
+        update = next(data for _, method, data in sentry.calls if method == "PUT")
+        self.assertEqual(update["refs"][0]["previousCommit"], INITIAL)
 
     def test_retries_do_not_duplicate_an_already_reported_deploy(self):
         deploy = {"environment": "production", "name": f"{DEPLOY_PREFIX}{COMMIT}"}
@@ -164,7 +179,7 @@ class ReleaseTests(unittest.TestCase):
             [{"version": COMMIT, "deployCount": 1}],
             {f"releases/{COMMIT}/deploys/": [deploy]},
         )
-        reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+        reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         self.assertTrue(all(method == "GET" for _, method, _ in sentry.calls))
 
     def test_failed_commit_import_cannot_report_a_successful_deployment(self):
@@ -175,7 +190,7 @@ class ReleaseTests(unittest.TestCase):
             side_effect=RuntimeError("import failed"),
         ):
             with self.assertRaises(RuntimeError):
-                reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+                reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         self.assertFalse(
             any(
                 path.endswith("deploys/") and method == "POST"
@@ -191,7 +206,7 @@ class ReleaseTests(unittest.TestCase):
             side_effect=HTTPError("https://de.sentry.io", 403, "Forbidden", {}, None),
         ) as request:
             with self.assertRaises(HTTPError):
-                reporter.report_release(sentry, "example", REPOSITORY, COMMIT, INITIAL)
+                reporter.report_release(sentry, "example", REPOSITORY, REPOSITORY_ID, COMMIT, INITIAL)
         self.assertEqual(request.call_count, 1)
 
 
