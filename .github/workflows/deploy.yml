@@ -1,0 +1,216 @@
+name: Deploy
+
+# Two environments on the server pt-prd-ave-app (docs/deployment.md):
+# - staging (https://staging.ave-gastro.org): each commit on main that passes CI.
+# - production (https://app.ave-gastro.org): each published release vX.Y.Z.
+# "Run workflow" on main deploys main to staging again; on a tag vX.Y.Z it
+# deploys that release to production, also to go back to an older release.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions: {}
+
+# One deploy per environment at a time. A newer one waits; it never cancels a
+# running deploy. GitHub keeps one waiting run per group and cancels the one
+# before, so runs that will not deploy (failed or cancelled checks,
+# pre-releases, other refs) get a group of their own and cannot push a waiting
+# deploy out.
+concurrency:
+  group: >-
+    ${{ ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') ||
+    (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')) && 'deploy-staging' ||
+    ((github.event_name == 'release' && !github.event.release.prerelease) ||
+    (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v'))) && 'deploy-production' ||
+    format('deploy-skipped-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+jobs:
+  # Decides the environment and whether to deploy at all:
+  # - staging: only the newest commit on main. A rerun of CI for an older
+  #   commit, or a CI run that finishes after a newer push, would otherwise put
+  #   an older version back.
+  # - production: only a tag vX.Y.Z on a commit of main that passed CI there. A
+  #   published release deploys only when it is the highest version, so a
+  #   release for an older line never replaces a newer one; "Run workflow" on a
+  #   tag deploys it regardless (going back).
+  target:
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') ||
+      (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
+      (github.event_name == 'release' && !github.event.release.prerelease)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      environment: ${{ steps.check.outputs.environment }}
+      url: ${{ steps.check.outputs.url }}
+      sha: ${{ steps.check.outputs.sha }}
+      image: ${{ steps.check.outputs.image }}
+      sentry_environment: ${{ steps.check.outputs.sentry_environment }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        run: |
+          set -euo pipefail
+          repo=$GITHUB_REPOSITORY
+          if [ "$EVENT" = workflow_run ] || [ "$REF" = refs/heads/main ]; then
+            main=$(gh api "repos/$repo/commits/main" --jq .sha)
+            if [ "$SHA" != "$main" ]; then
+              echo "::notice::Not deployed: $SHA is no longer the newest commit on main ($main)."
+              exit 0
+            fi
+            {
+              echo "environment=staging"
+              echo "url=https://staging.ave-gastro.org"
+              echo "image=ghcr.io/projecttogether/ave-app-staging"
+              echo "sentry_environment=staging"
+              echo "version="
+            } >> "$GITHUB_OUTPUT"
+          else
+            if ! [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::$TAG is not a release tag (vX.Y.Z)."
+              exit 1
+            fi
+            status=$(gh api "repos/$repo/compare/$SHA...main" --jq .status)
+            if [ "$status" != identical ] && [ "$status" != ahead ]; then
+              echo "::error::$TAG ($SHA) is not a commit on main."
+              exit 1
+            fi
+            passed=$(gh run list -R "$repo" --workflow CI --branch main --event push --commit "$SHA" --status success --limit 1 --json databaseId --jq length)
+            if [ "$passed" != 1 ]; then
+              echo "::error::CI has not passed on main for $TAG ($SHA)."
+              exit 1
+            fi
+            if [ "$EVENT" = release ]; then
+              highest=$(gh release list -R "$repo" --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName' \
+                | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+              if [ "$TAG" != "$highest" ]; then
+                echo "::notice::Not deployed: $TAG is not the highest release ($highest). Run Deploy on its tag to deploy it anyway."
+                exit 0
+              fi
+            fi
+            {
+              echo "environment=production"
+              echo "url=https://app.ave-gastro.org"
+              echo "image=ghcr.io/projecttogether/ave-app"
+              echo "sentry_environment=production"
+              echo "version=$TAG"
+            } >> "$GITHUB_OUTPUT"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  # Each environment has an image repository of its own: the Sentry environment
+  # is built into the browser bundle, so a staging build cannot go to
+  # production. A release builds its commit again for production.
+  image:
+    needs: target
+    if: needs.target.outputs.environment != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      SHA: ${{ needs.target.outputs.sha }}
+      IMAGE: ${{ needs.target.outputs.image }}
+      SENTRY_ENVIRONMENT: ${{ needs.target.outputs.sentry_environment }}
+      VERSION: ${{ needs.target.outputs.version }}
+    steps:
+      - name: Sign in to the registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      # A deploy of a commit that was built before (a setting changed, going
+      # back to a release) skips the build.
+      - id: built
+        run: |
+          if docker buildx imagetools inspect "$IMAGE:sha-$SHA" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$IMAGE:sha-$SHA exists; not built again."
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.built.outputs.exists != 'true'
+        with:
+          ref: ${{ env.SHA }}
+          persist-credentials: false
+      # The build runs the checks again (Dockerfile). The Sentry token is mounted
+      # only for `npm run build`, which uploads the source maps; it never enters
+      # the image. SOURCE_COMMIT names the Sentry release.
+      - name: Build and push the image
+        if: steps.built.outputs.exists != 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+        run: |
+          tags=(--tag "$IMAGE:sha-$SHA")
+          [ -z "$VERSION" ] || tags+=(--tag "$IMAGE:$VERSION")
+          docker buildx create --use --driver docker-container >/dev/null
+          docker buildx build . --push "${tags[@]}" \
+            --secret id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
+            --build-arg "SOURCE_COMMIT=$SHA" \
+            --build-arg "NEXT_PUBLIC_SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$SHA" \
+            --cache-from "type=registry,ref=$IMAGE:buildcache" \
+            --cache-to "type=registry,ref=$IMAGE:buildcache,mode=max"
+      - name: Tag the existing image with the version
+        if: steps.built.outputs.exists == 'true' && env.VERSION != ''
+        run: docker buildx imagetools create --tag "$IMAGE:$VERSION" "$IMAGE:sha-$SHA"
+
+  deploy:
+    needs: [target, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: ${{ needs.target.outputs.environment }}
+      url: ${{ needs.target.outputs.url }}
+    permissions:
+      packages: read
+    steps:
+      # The server's deploy script pulls the image with this job's token (it
+      # expires with the job), writes the settings, starts the new version, and
+      # puts the previous one back if the new one does not become healthy.
+      - name: Deploy to the server
+        env:
+          IMAGE_REF: ${{ needs.target.outputs.image }}:sha-${{ needs.target.outputs.sha }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          # The app's settings from the job's environment (staging or
+          # production). Empty ones are left out. A new setting needs a line
+          # here and in SETTINGS. SOURCE_COMMIT lets /api/health confirm the
+          # deployed commit (Sentry release workflow).
+          SETTINGS: >-
+            AUTH_SECRET PREVIOUS_AUTH_SECRET EMAIL_SERVER_USER EMAIL_SERVER_PASSWORD
+            EMAIL_SERVER_HOST EMAIL_SERVER_PORT EMAIL_FROM SOURCE_COMMIT
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          PREVIOUS_AUTH_SECRET: ${{ secrets.PREVIOUS_AUTH_SECRET }}
+          EMAIL_SERVER_USER: ${{ secrets.EMAIL_SERVER_USER }}
+          EMAIL_SERVER_PASSWORD: ${{ secrets.EMAIL_SERVER_PASSWORD }}
+          EMAIL_SERVER_HOST: ${{ vars.EMAIL_SERVER_HOST }}
+          EMAIL_SERVER_PORT: ${{ vars.EMAIL_SERVER_PORT }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          SOURCE_COMMIT: ${{ needs.target.outputs.sha }}
+        run: |
+          install -d -m 700 ~/.ssh
+          (umask 077 && printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy)
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          jq -n --arg image "$IMAGE_REF" --arg token "$TOKEN" '
+            ($ENV.SETTINGS | [splits("\\s+")] | map(select(. != ""))) as $names
+            | {image: $image, token: $token,
+               settings: ($ENV | with_entries(select(.key as $k | $names | index($k)) | select(.value != "")))}' \
+          | ssh -T -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "deploy@$DEPLOY_HOST"

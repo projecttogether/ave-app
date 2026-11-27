@@ -1,0 +1,244 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1770223705513,
+      "tag": "0000_first_hiroim",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770716041685,
+      "tag": "0001_calm_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770805532701,
+      "tag": "0002_loud_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770827289335,
+      "tag": "0003_right_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770909924576,
+      "tag": "0004_red_captain_universe",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770982990646,
+      "tag": "0005_worthless_thor_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770992889975,
+      "tag": "0006_minor_lady_ursula",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771422737988,
+      "tag": "0007_uneven_phantom_reporter",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772555224130,
+      "tag": "0008_certain_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772560644943,
+      "tag": "0009_add_passkey_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773743524244,
+      "tag": "0010_tired_dark_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773750992839,
+      "tag": "0011_parallel_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773857451832,
+      "tag": "0012_powerful_firebrand",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773857451840,
+      "tag": "0013_qualitative_stats_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1773857451841,
+      "tag": "0014_cleanup_empty_indicator_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1773857451842,
+      "tag": "0015_stats_yearly_data_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1773857451843,
+      "tag": "0016_dashboard_stats_qualitative_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1773857451844,
+      "tag": "0017_dashboard_stats_monthly_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774000000000,
+      "tag": "0018_qualitative_scores_yearly_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774007203919,
+      "tag": "0019_blushing_kid_colt",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774008000000,
+      "tag": "0020_add_scoring_results_to_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774100000000,
+      "tag": "0021_fix_dashboard_scoring_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0022_emergency_fix_dashboard_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0023_exclude_test_org_pattern",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774400000000,
+      "tag": "0024_migrate_percentage_options",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1775056647395,
+      "tag": "0025_eager_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775057107048,
+      "tag": "0026_flaky_blob",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1776254400000,
+      "tag": "0028_add_global_view_only_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790208000000,
+      "tag": "0030_tenant_isolation",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790640000000,
+      "tag": "0036_organization_team",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1790676000000,
+      "tag": "0037_quarterly_periods",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790726400000,
+      "tag": "0039_operating_reporting_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790812800000,
+      "tag": "0040_user_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791072000000,
+      "tag": "0042_protected_account_updates",
+      "breakpoints": true
+    }
+  ]
+}

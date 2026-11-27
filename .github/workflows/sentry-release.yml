@@ -1,0 +1,89 @@
+# Deployment gating and token setup: docs/sentry-releases.md
+name: Sentry release
+
+# Production deploys published releases (docs/deployment.md), so the report
+# runs for a release, or for "Run workflow" on a release tag. Pull requests and
+# pushes to main run only the tests.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sentry-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Release reporting tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out the exact commit
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git init --quiet
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git -c http.extraheader="Authorization: basic $auth" \
+            fetch --quiet --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+      - run: python3 -m unittest discover -s scripts -p test_sentry_release.py
+
+  report:
+    name: Report deployed release
+    needs: test
+    if: >-
+      (github.event_name == 'release' && !github.event.release.prerelease) ||
+      (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      # Deploy skips a published release that is not the highest version
+      # (.github/workflows/deploy.yml); waiting for it would only time out.
+      - name: Check that Deploy deploys this release
+        id: deploys
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = release ]; then
+            highest=$(gh release list -R "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+            if [ "$TAG" != "$highest" ]; then
+              echo "::notice::Not reported: Deploy skips $TAG, which is not the highest release ($highest)."
+              exit 0
+            fi
+          fi
+          echo "deploys=true" >> "$GITHUB_OUTPUT"
+      - name: Check out the exact commit
+        if: steps.deploys.outputs.deploys == 'true'
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git init --quiet
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git -c http.extraheader="Authorization: basic $auth" \
+            fetch --quiet --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+      - name: Confirm deployment and report to Sentry
+        if: steps.deploys.outputs.deploys == 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
+          SENTRY_PROJECT: ave-app
+          SENTRY_INITIAL_PREVIOUS_COMMIT: f1f0bedcef8c340e1cb7ed422e2de9e3c881bd60
+          DEPLOYMENT_HEALTH_URLS: >-
+            https://app.ave-gastro.org/api/health
+        run: python3 scripts/sentry_release.py

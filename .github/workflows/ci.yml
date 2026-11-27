@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Jobs only read the checkout. No step needs repository write access or secrets.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NEXT_PUBLIC_SENTRY_ENABLED: "false"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+# The repository allows only GitHub-owned actions pinned to full commit SHAs.
+# Dependabot updates the pins.
+jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # npm audits the lockfile, so this job needs no install.
+      - run: npm run audit
+
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Generated SQL
+        run: npm run formulas:check
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Unit tests
+        run: npm run test:run
+      - name: RSC cancellation
+        run: npm run test:rsc-abort
+
+  database:
+    name: Database tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # Each suite starts its own disposable PostgreSQL 15 container.
+      - name: SQL parity and migrations
+        run: npm run test:indicators:sql
+      - name: Tenant isolation and HTTP integration
+        run: npm run test:isolation
+
+  deployment:
+    name: Docker deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # Builds the production image, which also runs the checks in its build
+      # stage, then tests setup, restart and failed migrations on an internal network.
+      - run: npm run test:deployment

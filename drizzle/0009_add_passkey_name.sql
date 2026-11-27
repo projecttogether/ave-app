@@ -1,0 +1,1 @@
+ALTER TABLE "authenticator" ADD COLUMN "name" text;

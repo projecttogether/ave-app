@@ -1,0 +1,53 @@
+{
+  "reviewStatus": "Manual arithmetic reference; awaiting advisor confirmation",
+  "inputs": {
+    "year": 2026,
+    "granularity": null,
+    "kitchens": [
+      {"id":"00000000-0000-4000-8000-000000000002","organizationId":"00000000-0000-4000-8000-000000000001","name":"Kitchen A","foodWasteBaseAmount":"1200"},
+      {"id":"00000000-0000-4000-8000-000000000003","organizationId":"00000000-0000-4000-8000-000000000001","name":"Kitchen B","foodWasteBaseAmount":"1000"}
+    ],
+    "rows": [
+      {"id":"a-jan","subOrganizationId":"00000000-0000-4000-8000-000000000002","reportingYear":2026,"reportingMonth":1,"totalFoodSpend":"1000","meatSpend":"100","mixedProductSpend":"100","organicSpend":"400","coffeeSpend":"100","cocoaSpend":"100","bananasSpend":"100","cocoaMixedSpend":"200","fairTradeCoffeeSpend":"80","fairTradeCocoaSpend":"20","fairTradeBananasSpend":"0","fairTradeCocoaMixedSpend":"200","foodWasteAmount":"80"},
+      {"id":"a-feb","subOrganizationId":"00000000-0000-4000-8000-000000000002","reportingYear":2026,"reportingMonth":2,"totalFoodSpend":"9000","meatSpend":"1000","mixedProductSpend":"1000","organicSpend":"900","coffeeSpend":"900","fairTradeCoffeeSpend":"0","foodWasteAmount":"140"},
+      {"id":"b-year","subOrganizationId":"00000000-0000-4000-8000-000000000003","reportingYear":2026,"reportingMonth":0,"totalFoodSpend":"2000","meatSpend":"400","mixedProductSpend":"200","organicSpend":"800","coffeeSpend":"200","fairTradeCoffeeSpend":"100","foodWasteAmount":"700"},
+      {"id":"a-year-excluded","subOrganizationId":"00000000-0000-4000-8000-000000000002","reportingYear":2026,"reportingMonth":0,"totalFoodSpend":"99999","meatSpend":"0","organicSpend":"99999","coffeeSpend":"99999","fairTradeCoffeeSpend":"99999","foodWasteAmount":"99999"}
+    ],
+    "answers": [
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"plant_based","questionKey":"pb_score_dge_certified","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"organic","questionKey":"org_score_bio_ahvv_certified","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"food_waste","questionKey":"fw_score_measurement_done","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"seasonal","questionKey":"sea_score_1_wie_hoch_schaetzt_ihr_euren_ak","responseOption":"76-100%"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"seasonal","questionKey":"sea_score_1_wird_ein_saisonkalender_genutz","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"regional","questionKey":"reg_score_regional_share_total","responseOption":"26-50%"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"regional","questionKey":"reg_score_1_gibt_es_regionalitaetskriterie","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"regional","questionKey":"reg_score_1_werden_regionale_produkte_auf_","responseOption":"Geplant"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"fair_trade","questionKey":"ft_score_1_werden_nachweise_regelmaessig_","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"fair_trade","questionKey":"ft_score_1_werden_produkte_mit_sozialen_m","responseOption":"Geplant"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"guest_satisfaction","questionKey":"gs_score_1_werden_in_euren_betrieben_rege","responseOption":"Ja"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"guest_satisfaction","questionKey":"gs_scrore_standardized_tracking","responseOption":"Geplant"},
+      {"subOrganizationId":"00000000-0000-4000-8000-000000000002","indicatorSlug":"guest_satisfaction","questionKey":"gs_score_1_falls_bei_euch_die_gaestezufri","responseOption":"quartalsweise"}
+    ],
+    "history": []
+  },
+  "expected": {
+    "total_spend": 12000,
+    "plant_based_percentage": 82.08,
+    "organic_percentage": 17.5,
+    "fair_trade_percentage": 20,
+    "food_waste": -23.33,
+    "seasonal_score": 23,
+    "regional_score": 29,
+    "guest_satisfaction": 21
+  },
+  "qualitative": {"plant_based":6,"organic":5,"food_waste":5,"seasonal":23,"regional":29,"fair_trade":21,"guest_satisfaction":21},
+  "arithmetic": {
+    "plant_based_percentage": "100 * (850 + 7500 + 1500) / 12000 = 82.083333...",
+    "organic_percentage": "100 * (400 + 900 + 800) / 12000 = 17.5",
+    "fair_trade_percentage": "100 * (80 + 20 + 0.5*200 + 0 + 100) / (100 + 100 + 100 + 0.5*200 + 900 + 200) = 20",
+    "food_waste": "100 * (80 + 140 + 700 - (1200*2/12 + 1000)) / (1200*2/12 + 1000) = -23.333333...",
+    "seasonal_score": "round(100 * (5 + 2) / 31) = 23",
+    "regional_score": "round(100 * (3 + 2 + 1) / 21) = 29",
+    "guest_satisfaction": "round(100 * (2 + 1 + 3) / 28) = 21"
+  }
+}

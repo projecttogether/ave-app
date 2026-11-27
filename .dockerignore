@@ -1,0 +1,20 @@
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+*.tsbuildinfo
+.git
+.env*
+build
+dist
+.vercel
+
+# Drizzle
+
+
+# Tests
+cypress
+coverage
+__tests__

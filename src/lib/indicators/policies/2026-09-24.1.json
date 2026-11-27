@@ -1,0 +1,1252 @@
+{
+  "version": "2026-09-24.1",
+  "precision": 32,
+  "displayDecimals": 2,
+  "rounding": "half-away-from-zero",
+  "selection": "monthly-preferred-per-kitchen-year-indicator",
+  "missing": "all-numerators-blank-excludes-row; partial-blanks-count-as-zero",
+  "baseline": "explicit-annual-else-earliest-year; annual-prorated-by-measured-months; historical-months-must-match",
+  "scoring": "round-per-kitchen-then-round-mean; blanks-count-in-maximum",
+  "indicators": [
+    {
+      "id": "plant_based",
+      "order": 1,
+      "name": "Pflanzliche Lebensmittel",
+      "shortName": "Pflanzl. LM",
+      "target": 75,
+      "unit": "%"
+    },
+    {
+      "id": "organic",
+      "order": 2,
+      "name": "Ökologische Lebensmittel",
+      "shortName": "Ökolog. LM",
+      "target": 40,
+      "unit": "%"
+    },
+    {
+      "id": "food_waste",
+      "order": 3,
+      "name": "Lebensmittelabfälle",
+      "shortName": "Food Waste",
+      "target": -30,
+      "unit": "%"
+    },
+    {
+      "id": "seasonal",
+      "order": 4,
+      "name": "Saisonale Lebensmittel",
+      "shortName": "Saisonalität",
+      "target": 60,
+      "unit": "Pkt."
+    },
+    {
+      "id": "regional",
+      "order": 5,
+      "name": "Regionale Lebensmittel",
+      "shortName": "Regionalität",
+      "target": 20,
+      "unit": "Pkt."
+    },
+    {
+      "id": "fair_trade",
+      "order": 6,
+      "name": "Faire Beziehungen",
+      "shortName": "Faire Bezieh.",
+      "target": 90,
+      "unit": "%"
+    },
+    {
+      "id": "guest_satisfaction",
+      "order": 7,
+      "name": "Gästezufriedenheit",
+      "shortName": "Gästezufried.",
+      "target": 75,
+      "unit": "Pkt."
+    }
+  ],
+  "formulas": {
+    "total_spend": {
+      "title": "Gesamteinkauf Lebensmittel",
+      "description": "Gesamtausgaben für Lebensmitteleinkäufe.",
+      "unit": "€",
+      "column": "totalFoodSpend"
+    },
+    "plant_based_percentage": {
+      "title": "Pflanzliche Lebensmittel",
+      "description": "Anteil der Lebensmittelausgaben für pflanzliche Produkte.",
+      "unit": "%",
+      "computed": true,
+      "calculation": "inverse_sum",
+      "spendColumns": [
+        "meatSpend",
+        "fishSpend",
+        "dairySpend",
+        "eggSpend",
+        "mixedProductSpend"
+      ],
+      "weights": {
+        "mixedProductSpend": 0.5
+      }
+    },
+    "organic_percentage": {
+      "title": "Ökologische Lebensmittel",
+      "description": "Anteil der Lebensmittelausgaben für ökologische Produkte.",
+      "unit": "%",
+      "column": "organicSpend",
+      "computed": true,
+      "spendColumn": "organicSpend"
+    },
+    "fair_trade_percentage": {
+      "title": "Faire Beziehungen",
+      "description": "Anteil der Lebensmittelausgaben für Fair-Trade-Produkte.",
+      "unit": "%",
+      "computed": true,
+      "spendColumns": [
+        "fairTradeBananasSpend",
+        "fairTradeCocoaSpend",
+        "fairTradeCoffeeSpend",
+        "fairTradeCocoaMixedSpend"
+      ],
+      "denominatorColumns": [
+        "bananasSpend",
+        "cocoaSpend",
+        "coffeeSpend",
+        "cocoaMixedSpend"
+      ],
+      "weights": {
+        "fairTradeCocoaMixedSpend": 0.5,
+        "cocoaMixedSpend": 0.5
+      }
+    },
+    "regional_score": {
+      "title": "Regionale Lebensmittel",
+      "description": "Score der Aktivitäten für regionale Beschaffung.",
+      "unit": "Pkt.",
+      "column": "regionalScoringResult"
+    },
+    "seasonal_score": {
+      "title": "Saisonale Lebensmittel",
+      "description": "Score der Aktivitäten für saisonale Beschaffung.",
+      "unit": "Pkt.",
+      "column": "seasonalScoringResult"
+    },
+    "guest_satisfaction": {
+      "title": "Gästezufriedenheit",
+      "description": "Score der Aktivitäten zur Gästezufriedenheit.",
+      "unit": "Pkt.",
+      "column": "guestSatisfactionScoringResult"
+    },
+    "food_waste": {
+      "title": "Lebensmittelabfälle",
+      "description": "Gesamte Lebensmittelabfälle.",
+      "unit": "%",
+      "column": "foodWasteAmount"
+    }
+  },
+  "questions": [
+    {
+      "key": "pb_score_dge_certified",
+      "indicator": "plant_based",
+      "label": "Ist euer Speisenangebot von der DGE zertifiziert?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_daily_plant_main",
+      "indicator": "plant_based",
+      "label": "Wird tägliche eine vollwertige pflanzliche Hauptspeise angeboten?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_plant_all_menu_lines",
+      "indicator": "plant_based",
+      "label": "Werden in allen Menülinien pflanzliche Optionen angeboten?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_plant_first_choice",
+      "indicator": "plant_based",
+      "label": "Ist das Angebot so gestaltet, dass pflanzliche Optionen als „erste Wahl“ wahrgenommen werden können?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_nudging_strategies",
+      "indicator": "plant_based",
+      "label": "Setzt ihr bereits Nudging-Strategien ein (z. B. Platzierung, Sprache, Menüstruktur), um pflanzliche Optionen attraktiver zu machen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_plant_price_attractive",
+      "indicator": "plant_based",
+      "label": "Im Falle von mehreren Menülinien: Wird das pflanzliche Gericht preislich attraktiver angeboten?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_training_kitchen",
+      "indicator": "plant_based",
+      "label": "Werden bei euren Küchen-Mitarbeiter:innen Schulungen zum Thema vegetarische/ pflanzliche Küche durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_certified_partner_kitchen",
+      "indicator": "plant_based",
+      "label": "Setzt ihr diese Weiterbildungen mit einem zertifizierten Partner um?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_training_serving",
+      "indicator": "plant_based",
+      "label": "Werden bei euren Ausgabe-Mitarbeiter:innen Schulungen zum Thema vegetarische/ pflanzliche Küche durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_certified_partner_serving",
+      "indicator": "plant_based",
+      "label": "Setzt ihr diese Weiterbildungen mit einem zertifizierten Partner um?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_animal_welfare_labels",
+      "indicator": "plant_based",
+      "label": "Werden tierische Produkte mit anerkannten Tierwohl-/Nachhaltigkeitssiegeln bezogen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_animal_welfare_share",
+      "indicator": "plant_based",
+      "label": "Wie hoch ist der Anteil der tierischen Produkte mit anerkannten Tierwohl-/Nachhaltigkeitssiegeln am Gesamteinkauf tierischer Produkte? ",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "pb_score_animal_organic_share",
+      "indicator": "plant_based",
+      "label": "Welcher Anteil der tierischen Produkte wird in Bio-Qualität eingekauft? ",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_bio_ahvv_certified",
+      "indicator": "organic",
+      "label": "Ist der Betrieb offiziell Bio zertifiziert nach Bio-AHHV?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_regenerative_products",
+      "indicator": "organic",
+      "label": "Werden Produkte aus regenerativer Landwirtschaft eingesetzt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_uncertified_eco",
+      "indicator": "organic",
+      "label": "Werden Produkte von Betrieben bezogen, die nach ökologischen Standards arbeiten, aber nicht zertifiziert sind?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_bio_transition",
+      "indicator": "organic",
+      "label": "Bezieht Ihr Produkte aus Betrieben in der Umstellung auf Bio? (Umstellungsware)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_transition_share",
+      "indicator": "organic",
+      "label": "Wie hoch ist der Anteil an Umstellungsware am Gesamteinkauf?",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_association_bio_share",
+      "indicator": "organic",
+      "label": "Wie hoch ist der Anteil am Bio-Anteil an Verbandsware (Demeter, Bioland, Naturland) am Bio-Einkauf?",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_training_kitchen",
+      "indicator": "organic",
+      "label": "Werden bei euren Küchen-Mitarbeiter:innen Schulungen zum Thema Bio-Küche durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_certified_partner_kitchen",
+      "indicator": "organic",
+      "label": "Setzt ihr diese Weiterbildungen mit einem zertifizierten Partner um?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_training_serving",
+      "indicator": "organic",
+      "label": "Werden bei euren Ausgabe-Mitarbeiter:innen Schulungen zum Thema Bio-Küche durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_certified_partner_serving",
+      "indicator": "organic",
+      "label": "Setzt ihr diese Weiterbildungen mit einem zertifizierten Partner um?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_bio_associations",
+      "indicator": "organic",
+      "label": "Beratung durch Bio-Anbauverbände (z. B. Bioland, Naturland, Demeter)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_ribe",
+      "indicator": "organic",
+      "label": "Förderung durch RIBE AHV (staatlich geförderte Beratung)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_peer_learning",
+      "indicator": "organic",
+      "label": "Austausch mit anderen Betrieben / Peer-Learning",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_eco_regions",
+      "indicator": "organic",
+      "label": "Unterstützung durch Öko-Modellregionen",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_biobitte",
+      "indicator": "organic",
+      "label": "BioBitte-Materialien / BLE-Angebote",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_control_bodies",
+      "indicator": "organic",
+      "label": "Kontakt zu Kontrollstellen (z. B. ABCERT, GfRS)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_research",
+      "indicator": "organic",
+      "label": "Begleitung durch Wissenschaft / Forschungsprojekte (z. B. NAHGAST, KEEKS)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "org_score_support_training",
+      "indicator": "organic",
+      "label": "Teilnahme an Fortbildungen, Schulungen oder Fachtagen",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measurement_done",
+      "indicator": "food_waste",
+      "label": "Wurde im Berichtsjahr eine Abfallerhebung durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measurement_system",
+      "indicator": "food_waste",
+      "label": "Arbeitet ihr bei der Abfallmessung mit einem bestimmten System/digitalem Tool?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_external_certification",
+      "indicator": "food_waste",
+      "label": "Ist eine externe Bestätigung/Zertifizierung vorhanden?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_internal_feedback",
+      "indicator": "food_waste",
+      "label": "Gibt es interne Rückmeldeschleifen zum Abfallaufkommen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_waste_training",
+      "indicator": "food_waste",
+      "label": "Werden intern Schulungen zur Abfallvermeidung durchgeführt ?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_internal_evaluation",
+      "indicator": "food_waste",
+      "label": "Gibt es eine interne Evaluation der Maßnahmen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_control_points",
+      "indicator": "food_waste",
+      "label": "Wurden Abfallkontrollpunkte eingeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_portion_sizes",
+      "indicator": "food_waste",
+      "label": "Portionsgrößen anpassen",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_free_refill",
+      "indicator": "food_waste",
+      "label": "Kostenlose Nachschlagoption anbieten",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_variable_sides",
+      "indicator": "food_waste",
+      "label": "Variable Beilagenauswahl",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_reduce_decoration",
+      "indicator": "food_waste",
+      "label": "Reduktion essbarer Dekoration",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_front_cooking",
+      "indicator": "food_waste",
+      "label": "Front‑Cooking zur bedarfsgerechten Ausgabe",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_takeaway_boxes",
+      "indicator": "food_waste",
+      "label": "Einführung von Mitnahmeboxen",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_buffet_design",
+      "indicator": "food_waste",
+      "label": "Optimierte Buffetgestaltung (z. B. flachere Behälter)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_flexible_planning",
+      "indicator": "food_waste",
+      "label": "Flexible Speiseplanung (Bestands-/Bedarfsdaten)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_rescued_food",
+      "indicator": "food_waste",
+      "label": "Einsatz geretteter/überzähliger Lebensmittel ",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_food_donation",
+      "indicator": "food_waste",
+      "label": "Spende überschüssiger Speisen ",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_measure_reduce_standards",
+      "indicator": "food_waste",
+      "label": "Reduktion der Standardmengen für Brot/Beilagen ",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "fw_score_nudging",
+      "indicator": "food_waste",
+      "label": "Arbeitet ihr beim Thema Lebensmittelverschwendung mit Nudging-Maßnahmen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wie_hoch_schaetzt_ihr_euren_ak",
+      "indicator": "seasonal",
+      "label": "Wie hoch schätzt ihr euren aktuellen Anteil an saisonalen Lebensmitteln? Per Definition: Anteil an frischem Obst und Gemüse Verarbeitungsgrad I und II innerhalb dieser Produktgruppe",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_ein_saisonkalender_genutz",
+      "indicator": "seasonal",
+      "label": "Wird ein Saisonkalender genutzt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_ist_der_speiseplan_grundsaetzl",
+      "indicator": "seasonal",
+      "label": "Ist der Speiseplan grundsätzlich saisonal ausgerichtet?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_arbeitet_ihr_mit_einzelnen_wec",
+      "indicator": "seasonal",
+      "label": "Arbeitet ihr mit einzelnen wechselnden Zutaten nach Jahreszeit? (Bsp. Erdbeeren, Spargel, Kohl etc.)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_der_speiseplan_regelmaess",
+      "indicator": "seasonal",
+      "label": "Wird der Speiseplan regelmäßig angepasst (z.B. mind. 1x/Quartal)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_werden_im_wochenverlauf_mindes",
+      "indicator": "seasonal",
+      "label": "Werden im Wochenverlauf mindestens zwei Hauptgerichte angeboten, die klar erkennbare saisonale Komponenten enthalten? (z. B. Spargel im Frühjahr, Kürbis im Herbst)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_auf_flugware_konsequent_v",
+      "indicator": "seasonal",
+      "label": "Wird auf Flugware konsequent verzichtet?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_regelmaessig_auf_lagerwar",
+      "indicator": "seasonal",
+      "label": "Wird regelmäßig auf Lagerware (z. B. CA-gelagerte Äpfel, Zwiebeln, Kohl) zurückgegriffen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_tiefkuehlware_gezielt_ein",
+      "indicator": "seasonal",
+      "label": "Wird Tiefkühlware gezielt eingesetzt, um saisonale Lücken zu überbrücken?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_gibt_es_interne_richtlinien_zu",
+      "indicator": "seasonal",
+      "label": "Gibt es interne Richtlinien zur Saisonalität?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_finden_lieferantendialoge_zur_",
+      "indicator": "seasonal",
+      "label": "Finden Lieferantendialoge zur saisonalen Verfügbarkeit statt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wenn_ausgeschrieben_wird_werde",
+      "indicator": "seasonal",
+      "label": "Wenn ausgeschrieben wird, werden saisonale Kriterien in Ausschreibungen berücksichtigt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_1_wird_die_saisonale_ausrichtung",
+      "indicator": "seasonal",
+      "label": "Wird die saisonale Ausrichtung des Speiseplans in der Kommunikation gegenüber Gästen sichtbar gemacht? (z. B. Hinweise in Speiseplan oder Menüausgabe)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "sea_score_seasonal_cooperation",
+      "indicator": "seasonal",
+      "label": "Gibt es Kooperationen mit Lieferanten, um saisonale Produkte besser verfügbar zu machen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_regional_share_total",
+      "indicator": "regional",
+      "label": "Wie hoch schätzt ihr euren aktuellen Anteil an regionalen Produkten (200km um die Betriebsstätte herum produziert und/oder verarbeitet) am Gesamteinkauf?",
+      "maxPoints": 5,
+      "points": {
+        "<10%": 1,
+        "11-25%": 2,
+        "26-50%": 3,
+        "51-75%": 4,
+        "76-100%": 5,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_gibt_es_regionalitaetskriterie",
+      "indicator": "regional",
+      "label": "Gibt es Regionalitätskriterien in Ausschreibungen oder Einkaufsrichtlinien?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_werden_regionale_produkte_auf_",
+      "indicator": "regional",
+      "label": "Werden regionale Produkte auf  Lieferscheinen oder im Warenwirtschaftssystem gekennzeichnet?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_bestehen_direkte_partnerschaft",
+      "indicator": "regional",
+      "label": "Bestehen direkte Partnerschaften mit Landwirten oder regionalen Verarbeitern?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_existieren_interne_vorgaben_od",
+      "indicator": "regional",
+      "label": "Existieren interne Vorgaben oder Leitlinien zur Förderung regionaler Produkte?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_finden_regelmaessige_lieferant",
+      "indicator": "regional",
+      "label": "Finden regelmäßige Lieferantendialoge zur regionalen Beschaffung statt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_strat_priority_product_groups",
+      "indicator": "regional",
+      "label": "Gibt es eine Strategie, bestimmte Produktgruppen bevorzugt regional zu beziehen (z. B. Obst/Gemüse, Milchprodukte)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_1_werden_regionale_produkte_akti",
+      "indicator": "regional",
+      "label": "Werden regionale Produkte aktiv gegenüber Gästen kommuniziert (z. B. Kennzeichnung, Storytelling, Aktionen)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "reg_score_init_value_chain_cooperation",
+      "indicator": "regional",
+      "label": "Gibt es besondere Initiativen oder Kooperationen zur Stärkung regionaler Wertschöpfungsketten (z. B. Teilnahme an Netzwerken, Pilotprojekte)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_werden_nachweise_regelmaessig_",
+      "indicator": "fair_trade",
+      "label": "Werden Nachweise regelmäßig geprüft (z. B. Rechnungen, Zertifikate, Lieferantenerklärungen)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_werden_produkte_mit_sozialen_m",
+      "indicator": "fair_trade",
+      "label": "Werden Produkte mit sozialen Mindeststandards (z. B. Sorgfaltspflichten nach LkSG) berücksichtigt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_cert_recognized_labels",
+      "indicator": "fair_trade",
+      "label": "Arbeitet ihr hier mit anerkannten Siegeln?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_sind_faire_produkte_in_eurem_w",
+      "indicator": "fair_trade",
+      "label": "Sind faire Produkte in Eurem Warenwirtschaftssystem oder in der Buchhaltung eindeutig gekennzeichnet?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_werden_direkte_handelsbeziehun",
+      "indicator": "fair_trade",
+      "label": "Werden direkte Handelsbeziehungen zu Produzent:innen gepflegt (z. B. Kooperativen im Globalen Süden)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_steht_ihr_im_austausch_mit_eur",
+      "indicator": "fair_trade",
+      "label": "Steht ihr im Austausch mit euren Lieferanten über faire Alternativprodukte oder Lieferumstellungen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "ft_score_1_arbeitet_ihr_mit_einer_liefera",
+      "indicator": "fair_trade",
+      "label": "Arbeitet ihr mit einer Lieferantenrichtlinie, die Faire Beziehungen definiert?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_score_1_werden_in_euren_betrieben_rege",
+      "indicator": "guest_satisfaction",
+      "label": "Werden in euren Betrieben regelmäßig Maßnahmen zur Erfassung der Gästezufriedenheit durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_standardized_tracking",
+      "indicator": "guest_satisfaction",
+      "label": "Wird diese Erfassung standardisiert regelmäßig durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_informal_tracking",
+      "indicator": "guest_satisfaction",
+      "label": "Wird diese Erfassung informell regelmäßig durchgeführt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_score_1_gibt_es_ein_festes_team_oder_d",
+      "indicator": "guest_satisfaction",
+      "label": "Gibt es ein festes Team oder definierte Ansprechpersonen, die sich mit der Auswertung und Umsetzung von Gästefeedback beschäftigen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_info_guest_sustainability_info",
+      "indicator": "guest_satisfaction",
+      "label": "Informiert ihr die Tischgäste regelmäßig über Nachhaltigkeitsmaßnahmen eurer Einrichtung (z. B. CO₂-Werte, Bio-Anteil, Tierwohl, Saisonalität)?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_info_dish_environmental_impact",
+      "indicator": "guest_satisfaction",
+      "label": "Werden Informationen zu den Umweltwirkungen einzelner Speisen (z. B. CO₂-Ampel, Klimapunkte) bereitgestellt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_info_dish_health_impact",
+      "indicator": "guest_satisfaction",
+      "label": "Werden Informationen zu den Gesundheitswirkungen einzelner Speisen (z. B. Gesundheitsscore) bereitgestellt?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_guest_feedback_menu",
+      "indicator": "guest_satisfaction",
+      "label": "Können Gäste aktiv Vorschläge zur Speisegestaltung oder -bewertung einbringen?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_guest_feedback_response",
+      "indicator": "guest_satisfaction",
+      "label": "Gibt es sichtbare Rückmeldungen oder Veränderungen auf Basis des Gäste-Feedbacks?",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_dining_atmosphere_design",
+      "indicator": "guest_satisfaction",
+      "label": "Wird bei der Gestaltung des Speiseraums bewusst auf Wohlfühlatmosphäre geachtet? (z. B. Tischgestaltung, Raumgestaltung, Akustik)",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    },
+    {
+      "key": "gs_scrore_dining_food_aesthetics",
+      "indicator": "guest_satisfaction",
+      "label": "Wird bei der Präsentation der Speisen bewusst auf  Essästhetik geachtet? (z. B. Speisenanrichtung, Geschirrauswahl).",
+      "maxPoints": 2,
+      "points": {
+        "Ja": 2,
+        "Nein": 0,
+        "Geplant": 1,
+        "Unklar": 0
+      }
+    }
+  ]
+}
